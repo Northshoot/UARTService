@@ -24,6 +24,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <boards.h>
 #include <RBL_nRF8001.h>
 #include "message.h"
+#include "top_services.h"
+#include "Service70.h"
 
 unsigned char buf[16] = {0};
 //unsigned char len = 0;
@@ -33,6 +35,8 @@ uint8_t size = len-sizeof(Header);
 
 Header rx_service;
 CPacket packet;
+Header rx_header;
+CPacket rx_packet;
 
 void initMessage(void){
 	rx_service.uuid = 333;
@@ -42,7 +46,7 @@ void initMessage(void){
 	packet.data = 10000;
 
 }
-
+bleRXcallback service70 = Service70Callback;
 void setup()
 {
   // Default pins set to 9 and 8 for REQN and RDYN
@@ -65,19 +69,24 @@ void setup()
   Serial.print("sizeof(uint16_t)): ");
   Serial.println(sizeof(uint16_t));
 }
-
+uint8_t i = 0;
 void loop()
 {
+
   if ( ble_available() )
   {
-	uint8_t i = 0;
-    while ( ble_available() ){
-      i++;
+
+    while ( ble_available() ){ //get rx buffer
       Serial.write(ble_read());
     }
-    packet.data = i;
-    Serial.println();
-    Serial.println(i);
+    memcpy( (void*) &rx_packet, rx_buff, sizeof( CPacket ) );
+    //get packet
+
+    //extract header
+    rx_header = (Header)rx_packet.header;
+    //dispatch on uuid
+    Serial.print("RX UUID: ");
+    Serial.println(rx_header.uuid);
   }
 
 
